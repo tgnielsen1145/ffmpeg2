@@ -1,0 +1,5 @@
+bouncer: bouncer.cpp
+	g++ bouncer.cpp  -o bouncer
+
+clean:
+	rm -f bouncer
