@@ -8,6 +8,16 @@
   
  */
 
+/*
+  Copyright 2021 Todd Nielsen, Corey Buchanan
+  This work may not be copied for academic use.
+  
+  Citations:
+  https://github.com/loupus/ffmpeg_tutorial/blob/master/02_avformat_context.cpp - Help with decoding
+  https://riptutorial.com/ffmpeg/example/30957/reading-from-a-format-context - Help with decoding
+  
+ */
+
 extern "C"
 {
   #include <libavformat/avformat.h>
@@ -35,6 +45,11 @@ void decode_image(char *filename, AVFrame *frame) {
   
   AVCodec *codec = avcodec_find_decoder(format_context->streams[0]->codecpar->codec_id);
   AVCodecContext *codec_context = avcodec_alloc_context3(codec);
+  avcodec_parameters_to_context(codec_context,format_context->streams[0]->codecpar);
+  avcodec_open2(codec_context, codec, NULL);
+  frame= av_frame_alloc();
+  
+  
   
   if (!codec_context) {
     std::cout << "Failed to set up context.." << std::endl;
@@ -43,23 +58,23 @@ void decode_image(char *filename, AVFrame *frame) {
   }
 
   AVPacket packet;
-  
-  av_init_packet(&packet);
-  packet.data = NULL;
-  packet.size = 0;
+  av_read_frame(format_context, &packet);
+  //av_init_packet(&packet);
+  //packet.data = NULL;
+  //packet.size = 0;
 
 
-  if (av_read_frame(format_context, &packet) == 0) {
-    std::cout << "We couldn't read a frame" << std::endl;
-    avformat_close_input(&format_context);
-    av_packet_unref(&packet);
-    exit(1);
-  }
+//  if (av_read_frame(format_context, &packet) == 0) {
+   // std::cout << "We couldn't read a frame" << std::endl;
+   // avformat_close_input(&format_context);
+   // av_packet_unref(&packet);
+   // exit(1);
+  //}
 
   avcodec_send_packet(codec_context, &packet);
 
-  frame = av_frame_alloc();
-
+  
+ 
   if (avcodec_receive_frame(codec_context, frame) < 0){
     std::cout << "Fail 2" << std::endl;
     av_packet_unref(&packet);
@@ -100,14 +115,11 @@ int main(int argc, char** argv) {
   av_freep(frame);
 
   /*
-
     decode_image(argv[1], frame)
-
     for(i in 1...300)
       draw_ball(frame, i)
         // Draw ball calculates where the ball is based on height, width of image, and frame number
       encode(frame, image_name) // <outputimagename>i.png - may depend on input argv[2]
-
    */
 
   return 0;
